@@ -171,13 +171,14 @@ class BaseSolution:
                 # self.render.append([image_cell, ""])
         return np.reshape(verdict,(8,8,2))
 
-    def analyze_playground(self, robot, cellsize):
+    def analyze_playground(self, robot, objects, cellsize):
         # Analyza dat vytezenych ze snimku
-        pole = np.array([["" for i in range(8)] for i in range(8)], dtype='|S6')
+        pole = objects.copy()
+
         rob_pos = (round(robot[0][:, 0].mean()) // cellsize - 1, round(robot[0][:, 1].mean()) // cellsize - 1)
-        pole[rob_pos] = f"robot{robot[1]}"
-        #print(f"pole={pole}")
-        pass
+        pole[rob_pos[::-1]] = ["robot", robot[1]]
+
+        return pole
 
     def generate_path(self): 
         # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
@@ -207,7 +208,7 @@ class BaseSolution:
         fixed_image, leftups, cellsize = self.detect_playground(image)
         robot = self.detect_robot(fixed_image.copy())
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
-        self.analyze_playground(robot, cellsize)
+        pole = self.analyze_playground(robot, objects, cellsize)
         self.generate_path()
         self.send_solution()
         pass
