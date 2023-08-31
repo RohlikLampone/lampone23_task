@@ -11,7 +11,7 @@ def get_neighbors(current: tuple, maze: list):
         new_x = current[0] + dx
         new_y = current[1] + dy
 
-        if 0 <= new_x < len(maze) and 0 <= new_y < len(maze[0]) and maze[new_x][new_y] != 'w':
+        if 0 <= new_x < len(maze) and 0 <= new_y < len(maze[0]) and maze[new_x][new_y] != 0:
             neighbors.append((new_x, new_y))
 
     return neighbors
