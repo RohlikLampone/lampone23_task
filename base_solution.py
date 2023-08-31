@@ -118,10 +118,10 @@ class BaseSolution:
             cv2.line(image, front[0], front[0]-vector, (0,255,0), 10)
             cv2.line(image, front[0], front[0]-vector_perpendicular, (0,0,255), 10)
             image = cv2.putText(image, f"Angle:{str(round(angle))}, Ori: {orientation}", front[0], cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
+            # self.render.append([image, "detect_robot"])
             return corners[0][0], orientation
 
         #print(f"Corners: {corners}, IDs: {markerIds}, Main line: {front}") # Was for debug, best to keep it here
-        #self.render.append([image, "detect_robot"])
 
     def recognize_objects(self, image, leftups, cellsize):
         verdict = []
