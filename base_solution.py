@@ -6,6 +6,7 @@ from skimage import transform, data, io, measure
 from skimage.filters import threshold_otsu
 from skimage.morphology import square, erosion, dilation
 import math
+import socket
 
 class BaseSolution:
 
@@ -182,9 +183,10 @@ class BaseSolution:
 
     def generate_path(self): 
         # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
-        pass
+        instructions = []
+        return instructions
 
-    def send_solution(self):
+    def send_solution(self, instructions: list):
         if len(self.render):
             count = len(self.render)
             x = math.floor(math.sqrt(count))
@@ -200,7 +202,15 @@ class BaseSolution:
                 subplot[i].set_title(self.render[i][1])
                 subplot[i].axis("off")
             plt.show()
-        pass
+        
+        udp_ip = "localhost" # debug only, replace with real address
+        udp_port = 5005
+        msg = str(instructions).encode("ascii")
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(msg, (udp_ip, udp_port))
+
+
         # Poslani reseni na server pomoci UTP spojeni.
 
     def solve(self):
@@ -209,9 +219,7 @@ class BaseSolution:
         robot = self.detect_robot(fixed_image.copy())
         objects = self.recognize_objects(fixed_image, leftups, cellsize)
         pole = self.analyze_playground(robot, objects, cellsize)
-        self.generate_path()
-        self.send_solution()
-        pass
+        self.send_solution(self.generate_path())
 
 
 if __name__ == "__main__":
