@@ -132,41 +132,44 @@ class BaseSolution:
                 channels = []
                 for i in range(3):
                     channels.append(image_cell[:,:,i]<threshold_otsu(image_cell[:,:,i])) # Threshold the idividual images and put them in a nicely indexable array
-                for i in range(3):
                     channels[i] = erosion(channels[i],square(3)) # Erode in all the channels
                 mask = np.logical_and(channels[0], np.logical_and(channels[1], channels[2])) # Logical AND all the channels together to get a mask
                 shape = []
                 for i in range(3):
                     shape.append(np.logical_xor(mask,channels[i])) # XOR the individual channels with the mask
-                    shape[i] = erosion(shape[i],square(5)).astype(np.uint8) # Erode the noise away
-                    # shape[i] = erosion(cv2.GaussianBlur(shape[i].astype(np.uint8),(7,7),0),square(8)) # Blur and erode the noise away
-                blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2])
+                    shape[i] = erosion(shape[i],square(5)) # Erode the noise away
+                blue, green, red = np.sum(shape[0]), np.sum(shape[1]), np.sum(shape[2]) # Count all the pixels in the thresholded channels
                 if red > 300 and green > 300 and blue < 300:
-                    verdict.append(["red"])
+                    verdict.append(["red",""])
                 elif red > 300 and green < 300 and blue > 300:
-                    verdict.append(["green"])
+                    verdict.append(["green",""])
                 elif red < 300 and blue > 300:
-                    verdict.append(["blue"])
+                    verdict.append(["blue",""])
                 else:
-                    verdict.append(["white"])
+                    verdict.append(["white",""])
+                contours = None
                 for i in range(3):
-                    prop = measure.regionprops(shape[i])
-                    if len(prop):
-                        print(f"Channel: {i}, Centroid: {prop[0].centroid}, Area: {prop[0].area}, BBArea: {prop[0].area_bbox}")
-                        if prop[0].area_bbox > 1000 and prop[0].area_bbox < 1400: # temp values
-                            verdict[-1].append("square")
-                            break
+                    contours, _ = cv2.findContours(shape[i].astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # Find countours
+                    cv2.drawContours(image_cell, contours, -1, (0,255,0), 3) # Draw them so i won't want to kill myself when i debug this shit
+                    for contour in contours:
+                        length = cv2.arcLength(contour, True)
+                        if length > 50:
+                            approx_shape = cv2.approxPolyDP(contour, 0.03 * length, True) # Approx the shape and length
+                            #image_cell = cv2.putText(image_cell, str(len(approx_shape)), (40,20+(20*i)), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
+                            if 3 < len(approx_shape) < 6:
+                                verdict[-1][1] = "square"
+                            elif 7 < len(approx_shape) < 12:
+                                verdict[-1][1] = "star"
+                # image_cell = cv2.putText(image_cell, str(verdict[-1]), (0,20), cv2.FONT_HERSHEY_DUPLEX, 0.4, (255,0,0), 1, cv2.LINE_AA)
                 # image_cell = cv2.putText(image_cell, str(blue), (20,30), cv2.FONT_HERSHEY_DUPLEX, 1, (0,0,255), 1, cv2.LINE_AA)
                 # image_cell = cv2.putText(image_cell, str(green), (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
                 # image_cell = cv2.putText(image_cell, str(red), (20,90), cv2.FONT_HERSHEY_DUPLEX, 1, (255,0,0), 1, cv2.LINE_AA)
-                if len(verdict[-1])>1:
-                    image_cell = cv2.putText(image_cell, verdict[-1][1], (20,60), cv2.FONT_HERSHEY_DUPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
-                self.render.append([shape[0], "", True])
-                self.render.append([shape[1], "", True])
-                self.render.append([shape[2], "", True])
-                #self.render.append([mask, ""])
-                self.render.append([image_cell, ""])
-        print(verdict)
+                # self.render.append([shape[0], "", True])
+                # self.render.append([shape[1], "", True])
+                # self.render.append([shape[2], "", True])
+                # self.render.append([mask, ""])
+                # self.render.append([image_cell, ""])
+        return np.reshape(verdict,(8,8,2))
 
     def analyze_playground(self, robot, cellsize):
         # Analyza dat vytezenych ze snimku
@@ -203,7 +206,7 @@ class BaseSolution:
         image = self.load_frame()
         fixed_image, leftups, cellsize = self.detect_playground(image)
         robot = self.detect_robot(fixed_image.copy())
-        self.recognize_objects(fixed_image, leftups, cellsize)
+        objects = self.recognize_objects(fixed_image, leftups, cellsize)
         self.analyze_playground(robot, cellsize)
         self.generate_path()
         self.send_solution()
