@@ -179,9 +179,117 @@ class BaseSolution:
         #print(f"pole={pole}")
         pass
 
-    def generate_path(self): 
-        # Vygenerovani cesty [L, F, R, B] -- pripadne dalsi kody pro slozitejsi ulohy
-        pass
+    def generate_path(self):
+
+        # start of test inputs
+        def extract_number_and_letters(input_str):
+            num_chars = []
+            letter_chars = []
+            is_number = True
+
+            for c in input_str:
+                if c.isnumeric() and is_number:
+                    num_chars.append(c)
+                else:
+                    is_number = False
+                    letter_chars.append(c)
+
+            number = int(''.join(num_chars))
+            letters = ''.join(letter_chars)
+
+            return number, letters
+
+
+        start = (7,4) # y,x
+        finish = (1,1) # y,x
+        e = -10000
+        map = [
+            [ e, e,+3, e, e,0 ,0 ,0 ],
+            [+3,0 ,0 ,0 , e,0 , e,+3],
+            [+3, e, e,+6, e,+6, e,+3],
+            [0 ,0 , e,0 ,0 ,0 , e,0 ],
+            [0 ,0 ,0 ,0 , e,0 ,0 ,0 ],
+            [0 , e, e,+3, e, e, e,0 ],
+            [0 ,0 , e, e, e,+6, e,0 ],
+            [+1000 ,0 , e,0 ,0 ,0 ,0 ,0 ],
+        ]
+        start_direction = 0
+
+        # end of test inputs
+
+        data = {
+            "map": map,
+            "start": start,
+            "finish": finish,
+            "start_dir": start_direction
+        }
+        with open("data.json", "w") as f:
+            json.dump(data, f)
+
+        def run_rust_binary():
+            result = subprocess.run("/home/adam/Desktop/lampone23_task-main/rust/target/release/rust", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+            return result
+
+        # start measuring time
+        time_start = time.time()
+
+        # Number of threads
+        num_instances = 16
+
+        best_score = -10000
+        best_path = ""
+
+        # Create a ThreadPoolExecutor with the desired number of threads
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_instances) as executor:
+            # Submit the task multiple times
+            future_to_instance = {executor.submit(run_rust_binary): i for i in range(num_instances)}
+
+            # Wait for all tasks to complete
+            for future in concurrent.futures.as_completed(future_to_instance):
+                instance_id = future_to_instance[future]
+                try:
+                    result = future.result()
+                    print(f"Instance {instance_id} completed with stdout: {result.stdout}")
+                    if best_score < extract_number_and_letters(result.stdout)[0]:
+                        # found new best path
+                        best_score = extract_number_and_letters(result.stdout)[0]
+                        best_path = extract_number_and_letters(result.stdout)[1]
+                except Exception as e:
+                    print(f"Instance {instance_id} raised an exception: {e}")
+        
+        result = best_path
+        print("\n\n Best score: " + str(best_score) + ", with the path:\n" + best_path)
+
+        # end measuring time
+        time_end = time.time()
+        print("time:", time_end - time_start)
+
+
+        turtle.penup()
+        turtle.forward(start[1]*100-400)
+        turtle.right(90)
+        turtle.forward(start[0]*100-400)
+        turtle.pendown()
+        turtle.turtlesize(3.0,3.0,3.0)
+
+        if start_direction == 0:
+            turtle.setheading(0)
+        if start_direction == 1:
+            turtle.setheading(90)
+        if start_direction == 2:
+            turtle.setheading(180)
+        if start_direction == 3:
+            turtle.setheading(270)
+        turtle.left(90)
+        # for c in path_to_lrfb(best_path, start_dir=start_direction):
+        for c in (result):
+            if c == "F":
+                forward(100)
+            if c == "L":
+                left(90)
+            if c == "R":
+                right(90)
+        turtle.mainloop()
 
     def send_solution(self):
         if len(self.render):
