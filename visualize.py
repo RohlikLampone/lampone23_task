@@ -139,6 +139,7 @@ class Visualization:
             self.iteration += 1
 
         ani = FuncAnimation(fig, update, frames=len(path), interval=500)
+        ani.save("ANIMACEVOLE.gif", "imagemagick", fps=2)
 
         plt.axis('off')
         plt.show()
