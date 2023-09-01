@@ -320,24 +320,24 @@ class BaseSolution:
         # turtle.pendown()
         # turtle.turtlesize(3.0,3.0,3.0)
 
-        if start_direction == 0:
-            turtle.setheading(0)
-        if start_direction == 1:
-            turtle.setheading(90)
-        if start_direction == 2:
-            turtle.setheading(180)
-        if start_direction == 3:
-            turtle.setheading(270)
-        turtle.left(90)
-        # for c in path_to_lrfb(best_path, start_dir=start_direction):
-        for c in (result):
-            if c == "F":
-                turtle.forward(40)
-            if c == "L":
-                turtle.left(90)
-            if c == "R":
-                turtle.right(90)
-        turtle.mainloop()
+        # if start_direction == 0:
+        #     turtle.setheading(0)
+        # if start_direction == 1:
+        #     turtle.setheading(90)
+        # if start_direction == 2:
+        #     turtle.setheading(180)
+        # if start_direction == 3:
+        #     turtle.setheading(270)
+        # turtle.left(90)
+        # # for c in path_to_lrfb(best_path, start_dir=start_direction):
+        # for c in (result):
+        #     if c == "F":
+        #         turtle.forward(40)
+        #     if c == "L":
+        #         turtle.left(90)
+        #     if c == "R":
+        #         turtle.right(90)
+        # turtle.mainloop()
 
         return result
 
